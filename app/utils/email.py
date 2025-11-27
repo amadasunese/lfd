@@ -4,6 +4,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 from flask import current_app, render_template_string
+from dotenv import load_dotenv
+load_dotenv()
 
 # Gmail SMTP config
 GMAIL_USER = os.getenv("GMAIL_USER")
@@ -90,14 +92,14 @@ The Lauracious Foodies Delight Team
         <div class="content">
             <h2>Hello {{ order.customer.first_name }}!</h2>
             <p>Thank you for your order at <strong>Lauracious Foodies Delight</strong>!</p>
-            
+
             <div class="order-details">
                 <h3>Order Details</h3>
                 <p><strong>Order Number:</strong> {{ order.order_number }}</p>
                 <p><strong>Total Amount:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
                 <p><strong>Status:</strong> {{ order.status.title() }}</p>
                 <p><strong>Delivery Address:</strong><br>{{ order.delivery_address }}</p>
-                
+
                 <h4>Items Ordered:</h4>
                 <ul>
                 {% for order_item in order.order_items %}
@@ -105,10 +107,10 @@ The Lauracious Foodies Delight Team
                 {% endfor %}
                 </ul>
             </div>
-            
+
             <p><strong>Estimated delivery time:</strong> 30-45 minutes</p>
             <p>We are preparing your order with love and care!</p>
-            
+
             <div class="footer">
                 <p>Best regards,<br>The Lauracious Foodies Delight Team</p>
                 <p><small>If you have any questions, please contact us at hello@lauraciousfoodies.com</small></p>
@@ -163,13 +165,13 @@ The Lauracious Foodies Delight Team
         <div class="content">
             <h2>Hello {{ order.customer.first_name }}!</h2>
             <p>Your order status has been updated!</p>
-            
+
             <div class="status-update">
                 <h3>Order #{{ order.order_number }}</h3>
                 <p><strong>Previous Status:</strong> {{ old_status.title() }}</p>
                 <p><strong>New Status:</strong> {{ new_status.title() }}</p>
             </div>
-            
+
             <div class="footer">
                 <p>Thank you for choosing <strong>Lauracious Foodies Delight</strong>!</p>
                 <p>Best regards,<br>The Lauracious Foodies Delight Team</p>

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from app.utils.email import send_order_confirmation_email, send_order_status_update_email
 from app.utils.paystack import init_payment, paystack
 import hmac, hashlib
-
+from paystackapi.transaction import Transaction
 
 bp = Blueprint('orders', __name__)
 
@@ -22,14 +22,14 @@ def cart():
 def add_to_cart():
     item_id = request.form.get('item_id')
     quantity = int(request.form.get('quantity', 1))
-    
+
     item = MenuItem.query.get_or_404(item_id)
-    
+
     # Here you would typically use a session or database to store cart items
     # For simplicity, we'll use a basic implementation
     if 'cart' not in session:
         session['cart'] = {}
-    
+
     cart = session['cart']
     if str(item_id) in cart:
         cart[str(item_id)]['quantity'] += quantity
@@ -39,9 +39,9 @@ def add_to_cart():
             'price': item.price,
             'quantity': quantity
         }
-    
+
     session['cart'] = cart
-    
+
     flash(f'{item.name} added to cart!', 'success')
     return redirect(url_for('menu.menu'))
 
@@ -50,16 +50,16 @@ def add_to_cart():
 def update_cart():
     item_id = request.form.get('item_id')
     quantity = int(request.form.get('quantity', 1))
-    
+
     if 'cart' not in session:
         session['cart'] = {}
-    
+
     cart = session['cart']
     if quantity > 0:
         cart[item_id]['quantity'] = quantity
     else:
         cart.pop(item_id, None)
-    
+
     session['cart'] = cart
     flash('Cart updated!', 'success')
     return redirect(url_for('orders.cart'))
@@ -68,11 +68,11 @@ def update_cart():
 @login_required
 def remove_from_cart():
     item_id = request.form.get('item_id')
-    
+
     if 'cart' in session:
         session['cart'].pop(item_id, None)
         session['cart'] = session['cart']  # Trigger session update
-    
+
     flash('Item removed from cart!', 'success')
     return redirect(url_for('orders.cart'))
 
@@ -97,7 +97,7 @@ def checkout():
 @login_required
 def order_confirmation(order_id):
     order = Order.query.get_or_404(order_id)
-    
+
     if order.customer_id != current_user.id and not current_user.is_admin:
         flash('Access denied', 'danger')
         return redirect(url_for('main.index'))
@@ -110,8 +110,8 @@ def order_confirmation(order_id):
         order=order,
         estimated_delivery=estimated_delivery
     )
-    
-    
+
+
 @bp.route('/my_orders')
 @login_required
 def my_orders():
@@ -128,7 +128,7 @@ def cart_count():
 @bp.route('/track_order/<order_number>')
 def track_order(order_number):
     order = Order.query.filter_by(order_number=order_number).first_or_404()
-    
+
     # Define the order of statuses
     status_order = [
         'Pending',
@@ -137,7 +137,7 @@ def track_order(order_number):
         'Out for Delivery',
         'Delivered'
     ]
-    
+
     # Which step is the current status?
     current_index = status_order.index(order.status) if order.status in status_order else -1
 
@@ -154,25 +154,25 @@ def track_order(order_number):
 @login_required
 def cancel_order(order_id):
     order = Order.query.get_or_404(order_id)
-    
+
     if order.customer_id != current_user.id:
         flash('Access denied', 'danger')
         return redirect(url_for('main.index'))
-    
+
     if order.status not in ['pending', 'confirmed']:
         flash('This order cannot be cancelled', 'warning')
         return redirect(url_for('orders.my_orders'))
-    
+
     old_status = order.status
     order.status = 'cancelled'
     db.session.commit()
-    
+
     # Send status update email
     try:
         send_order_status_update_email(order, old_status, 'cancelled')
     except Exception as e:
         current_app.logger.error(f"Failed to send order status update email: {e}")
-    
+
     flash('Order cancelled successfully', 'success')
     return redirect(url_for('orders.my_orders'))
 
@@ -182,17 +182,17 @@ def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     new_status = request.form.get('status')
     old_status = order.status
-    
+
     order.status = new_status
     order.updated_at = datetime.utcnow()
     db.session.commit()
-    
+
     # Send status update email
     try:
         send_order_status_update_email(order, old_status, new_status)
     except Exception as e:
         current_app.logger.error(f"Failed to send order status update email: {e}")
-    
+
     flash(f'Order {order.order_number} status updated to {new_status}', 'success')
     return redirect(url_for('admin.orders'))
 
@@ -276,7 +276,7 @@ def pay_with_paystack():
     if order.customer_id != current_user.id:
         flash('Unauthorized', 'danger')
         return redirect(url_for('orders.my_orders'))
-    
+
     result = init_payment(order, current_user)
 
     if not result:
@@ -306,6 +306,30 @@ def pay_with_paystack():
 
 
 # ---------- 3.  PAYSTACK RETURN URL ----------
+# @bp.route('/pay/callback')
+# @login_required
+# def paystack_callback():
+#     ref = request.args.get('reference')
+#     if not ref:
+#         flash('No reference returned', 'warning')
+#         return redirect(url_for('orders.my_orders'))
+
+#     resp = paystack.verify_transaction(ref)
+
+#     if resp['status'] and resp['data']['status'] == 'success':
+#         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
+#         order.status = 'confirmed'
+#         db.session.commit()
+
+#         # ✅ Clear cart HERE after confirming payment with Paystack
+#         session.pop('cart', None)
+
+#         flash('Payment successful! Your order is confirmed.', 'success')
+#         return redirect(url_for('orders.order_confirmation', order_id=order.id))
+
+#     flash('Payment failed or cancelled', 'warning')
+#     return redirect(url_for('orders.my_orders'))
+
 @bp.route('/pay/callback')
 @login_required
 def paystack_callback():
@@ -314,14 +338,15 @@ def paystack_callback():
         flash('No reference returned', 'warning')
         return redirect(url_for('orders.my_orders'))
 
-    resp = paystack.verify_transaction(ref)
+    # ✅ Use Transaction.verify instead of paystack.verify_transaction
+    resp = Transaction.verify(reference=ref)
 
     if resp['status'] and resp['data']['status'] == 'success':
         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
         order.status = 'confirmed'
         db.session.commit()
 
-        # ✅ Clear cart HERE after confirming payment with Paystack
+        # Clear cart after confirming payment
         session.pop('cart', None)
 
         flash('Payment successful! Your order is confirmed.', 'success')
