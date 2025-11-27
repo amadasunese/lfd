@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Track Order - {{ order.order_number }} - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-4">Track Your Order</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h3>Order #{{ order.order_number }}</h3>
+                        <p class="text-muted">Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                    
+                    <!-- Order Status Timeline -->
+                    <div class="order-timeline mb-4">
+                        <div class="timeline-container">
+                            {% set status_order = ['pending', 'confirmed', 'preparing', 'delivered'] %}
+                            {% set current_index = status_order.index(order.status) if order.status in status_order else -1 %}
+                            
+                            {% for status in status_order %}
+                                {% set i = loop.index0 %}
+                                <li class="step {% if i <= current_index %}completed{% endif %}">
+                                    <span class="step-number">{{ loop.index }}</span>
+                                    <span class="step-label">{{ status }}</span>
+                                </li>
+
+                            <div class="timeline-item {% if i <= current_index %}completed{% endif %}">
+                                <div class="timeline-marker">
+                                    <i class="fas {% if status == 'pending' %}fa-clock{% elif status == 'confirmed' %}fa-check{% elif status == 'preparing' %}fa-fire{% elif status == 'delivered' %}fa-home{% endif %}"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>{{ status.title() }}</h6>
+                                    <small class="text-muted">
+                                        {% if status == 'pending' %}Waiting for confirmation{% endif %}
+                                        {% if status == 'confirmed' %}Order confirmed{% endif %}
+                                        {% if status == 'preparing' %}Your food is being prepared{% endif %}
+                                        {% if status == 'delivered' %}Order delivered{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Order Details -->
+                    <div class="order-details mb-4">
+                        <h5>Order Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Total Amount:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+                                <p><strong>Payment Method:</strong> {{ order.payment_method.title() }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Delivery Address:</strong></p>
+                                <p class="text-muted">{{ order.delivery_address }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Items -->
+                    <div class="order-items mb-4">
+                        <h5>Items Ordered</h5>
+                        {% for order_item in order.order_items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                            <div>
+                                <strong>{{ order_item.menu_item.name }}</strong>
+                                <br>
+                                <small class="text-muted">Qty: {{ order_item.quantity }}</small>
+                            </div>
+                            <span>₦{{ "%.2f"|format(order_item.subtotal) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="text-center">
+                        {% if order.status in ['pending', 'confirmed'] %}
+                        <form method="POST" action="{{ url_for('orders.cancel_order', order_id=order.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger me-2" onclick="return confirm('Are you sure you want to cancel this order?');">
+                                Cancel Order
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ url_for('orders.my_orders') }}" class="btn btn-outline-primary">Back to My Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.order-timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.timeline-item {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-marker {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    color: #666;
+}
+
+.timeline-item.completed .timeline-marker {
+    background: var(--success-color);
+    color: white;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+}
+
+@media (max-width: 576px) {
+    .timeline-container {
+        flex-direction: column;
+    }
+    
+    .timeline-container::before {
+        width: 2px;
+        height: 100%;
+        left: 20px;
+        top: 0;
+    }
+    
+    .timeline-item {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        margin: 0 20px 0 0;
+    }
+}
+</style>
+{% endblock %}

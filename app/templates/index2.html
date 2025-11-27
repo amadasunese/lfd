@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ============================
+     HERO SECTION
+============================= -->
+<section class="hero-section bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center g-4">
+
+            <!-- Hero Text -->
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Welcome to Lauracious Foodies Delight</h1>
+                <p class="lead mb-4">
+                    Experience the finest culinary delights delivered right to your doorstep. 
+                    Fresh ingredients, expert preparation, and unforgettable flavors await you.
+                </p>
+                <a href="{{ url_for('menu.menu') }}" class="btn btn-light btn-lg fw-semibold">
+                    Order Now
+                </a>
+            </div>
+
+            <!-- Hero Image -->
+            <div class="col-lg-6 text-center">
+                <img 
+                    src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600" 
+                    alt="Delicious gourmet meal served fresh" 
+                    class="img-fluid rounded shadow-lg"
+                >
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================
+     FEATURED DISHES
+============================= -->
+<section class="featured-dishes py-4">
+    <div class="container">
+
+        <!-- Section Title -->
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Featured Dishes</h2>
+            <p class="text-muted">Our chef-recommended meals curated specially for you.</p>
+        </div>
+
+        <!-- Featured Items Grid -->
+        <div class="row g-4">
+            {% for item in featured_items %}
+            <div class="col-sm-6 col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+
+                    <!-- Dish Image -->
+                    <img 
+                        src="{{ item.image_url or ('https://via.placeholder.com/600x400?text=' ~ item.name) }}" 
+                        class="card-img-top" 
+                        alt="{{ item.name }}"
+                    >
+
+                    <!-- Dish Details -->
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-semibold">{{ item.name }}</h5>
+                        <p class="card-text text-muted mb-4">{{ item.description[:100] }}...</p>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="h5 text-primary mb-0">₦{{ "%.2f"|format(item.price) }}</span>
+
+                            <form method="POST" action="{{ url_for('orders.add_to_cart') }}">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ============================
+     WHY CHOOSE US
+============================= -->
+<section class="why-choose-us py-5 mt-4 bg-light">
+    <div class="container">
+        <div class="row g-4 text-center">
+
+            <!-- Benefit 1 -->
+            <div class="col-md-4">
+                <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Fast Delivery</h4>
+                <p class="text-muted">
+                    Quick and reliable delivery to get your food to you while it's still hot and fresh.
+                </p>
+            </div>
+
+            <!-- Benefit 2 -->
+            <div class="col-md-4">
+                <i class="fas fa-award fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Quality Ingredients</h4>
+                <p class="text-muted">
+                    We use only the freshest, highest-quality ingredients in all our dishes.
+                </p>
+            </div>
+
+            <!-- Benefit 3 -->
+            <div class="col-md-4">
+                <i class="fas fa-heart fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Made with Love</h4>
+                <p class="text-muted">
+                    Every dish is prepared with care and passion by our experienced chefs.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

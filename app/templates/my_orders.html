@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">My Orders</h1>
+    
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>{{ order.order_number }}</strong>
+                        <span class="order-status status-{{ order.status }}">{{ order.status.title() }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Order Date:</span>
+                            <span>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Amount:</span>
+                            <strong class="text-primary">₦{{ "%.2f"|format(order.total_amount) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Payment Method:</span>
+                            <span>{{ order.payment_method.title() }}</span>
+                        </div>
+                        
+                        <h6 class="mb-2">Items Ordered:</h6>
+                        <ul class="list-unstyled mb-3">
+                            {% for order_item in order.order_items %}
+                            <li class="small d-flex justify-content-between">
+                                <span>{{ order_item.quantity }}× {{ order_item.menu_item.name }}</span>
+                                <span>₦{{ "%.2f"|format(order_item.subtotal) }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('orders.track_order', order_number=order.order_number) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-map-marker-alt"></i> Track
+                            </a>
+                            {% if order.status in ['pending', 'confirmed'] %}
+                            <form method="POST" action="{{ url_for('orders.cancel_order', order_id=order.id) }}" 
+                                  class="d-inline" 
+                                  onsubmit="return confirm('Cancel this order?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </form>
+                            {% endif %}
+                            <a href="{{ url_for('orders.order_confirmation', order_id=order.id) }}" 
+                               class="btn btn-sm btn-outline-secondary ms-auto">
+                                <i class="fas fa-receipt"></i> Receipt
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination (if needed) -->
+        <nav aria-label="Orders pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+                <li class="page-item active">
+                    <span class="page-link">1</span>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">2</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-utensils fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted">No orders yet</h4>
+            <p class="text-muted mb-4">Start ordering from our delicious menu!</p>
+            <a href="{{ url_for('menu.menu') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-utensils"></i> Browse Menu
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+/* Order card enhancements */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.order-status {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* Timeline-like border for status */
+.card-header {
+    border-bottom: 3px solid #e9ecef;
+}
+
+.card-header .status-pending { border-bottom-color: var(--warning-color); }
+.card-header .status-confirmed { border-bottom-color: var(--info-color); }
+.card-header .status-preparing { border-bottom-color: #fd7e14; }
+.card-header .status-delivered { border-bottom-color: var(--success-color); }
+.card-header .status-cancelled { border-bottom-color: var(--danger-color); }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .card-body .d-flex.gap-2 {
+        flex-direction: row;
+        align-items: center !important;
+    }
+    
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Empty state styling */
+.text-center.py-5 {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    margin: 2rem 0;
+}
+</style>
+
+<script>
+// Add some interactive enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate cards on load
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Add click tracking for order cards
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking on buttons or links
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+            
+            const trackBtn = this.querySelector('a[href*="track_order"]');
+            if (trackBtn) {
+                trackBtn.click();
+            }
+        });
+    });
+    
+    // Add hover effect for status badges
+    const statusBadges = document.querySelectorAll('.order-status');
+    statusBadges.forEach(badge => {
+        badge.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+        });
+        badge.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6">
+            <img src="{{ item.image_url or 'https://via.placeholder.com/500x400?text=' + item.name }}" 
+                 alt="{{ item.name }}" class="img-fluid rounded shadow">
+        </div>
+        <div class="col-lg-6">
+            <h1>{{ item.name }}</h1>
+            <p class="lead">{{ item.description }}</p>
+            
+            <div class="mb-3">
+                <span class="h3 text-primary">₦{{ "%.2f"|format(item.price) }}</span>
+                <span class="text-muted">/ per serving</span>
+            </div>
+            
+            <div class="mb-3">
+                <strong>Category:</strong> {{ item.category.name }}
+            </div>
+            
+            <div class="mb-3">
+                <strong>Preparation Time:</strong> {{ item.preparation_time }} minutes
+            </div>
+            
+            <div class="mb-3">
+                <strong>Availability:</strong> 
+                {% if item.is_available %}
+                    <span class="badge bg-success">Available</span>
+                {% else %}
+                    <span class="badge bg-danger">Out of Stock</span>
+                {% endif %}
+            </div>
+            
+            {% if item.is_available %}
+            <form method="POST" action="{{ url_for('orders.add_to_cart') }}">
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="10">
+                    </div>
+                </div>
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </form>
+            {% else %}
+            <div class="alert alert-warning">
+                This item is currently out of stock.
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{{ url_for('menu.menu') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Menu
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

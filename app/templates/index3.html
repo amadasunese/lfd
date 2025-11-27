@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ============================
+     HERO SLIDER (CAROUSEL)
+============================= -->
+<section class="hero-slider mb-5">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+        </div>
+
+        <div class="carousel-inner">
+
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <div class="hero-slide-content d-flex align-items-center text-white">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 fade-in-left">
+                                <h1 class="display-4 fw-bold">Fresh. Delicious. Fast.</h1>
+                                <p class="lead">
+                                    Get the best meals delivered hot and fast to your doorstep.
+                                </p>
+                                <a href="{{ url_for('menu.menu') }}" class="btn btn-light btn-lg mt-3">Order Now</a>
+                            </div>
+                            <div class="col-lg-6">
+                                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
+                                     class="img-fluid rounded shadow-lg fade-in"
+                                     alt="Delicious Food">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <div class="hero-slide-content d-flex align-items-center text-white">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 fade-in-left">
+                                <h1 class="display-4 fw-bold">Quality Ingredients</h1>
+                                <p class="lead">We use only the freshest ingredients for every dish.</p>
+                                <a href="{{ url_for('menu.menu') }}" class="btn btn-light btn-lg mt-3">View Menu</a>
+                            </div>
+                            <div class="col-lg-6">
+                                <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800"
+                                     class="img-fluid rounded shadow-lg fade-in"
+                                     alt="Fresh Ingredients">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <div class="hero-slide-content d-flex align-items-center text-white">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6 fade-in-left">
+                                <h1 class="display-4 fw-bold">Made With Love</h1>
+                                <p class="lead">Every meal is prepared with care by our amazing chefs.</p>
+                                <a href="{{ url_for('menu.menu') }}" class="btn btn-light btn-lg mt-3">Explore Dishes</a>
+                            </div>
+                            <div class="col-lg-6">
+                                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800"
+                                     class="img-fluid rounded shadow-lg fade-in"
+                                     alt="Food Preparation">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+
+    </div>
+</section>
+
+
+<!-- ============================
+     FEATURED DISHES
+============================= -->
+<section class="featured-dishes py-4 fade-in">
+    <div class="container text-center mb-5">
+        <h2 class="fw-bold">Featured Dishes</h2>
+        <p class="text-muted">Our chef’s top recommendations</p>
+    </div>
+
+    <div class="container">
+        <div class="row g-4">
+            {% for item in featured_items %}
+            <div class="col-sm-6 col-md-4 slide-up">
+                <div class="card h-100 border-0 shadow-sm">
+                    <img src="{{ item.image_url or ('https://via.placeholder.com/600x400?text=' ~ item.name) }}"
+                         class="card-img-top" alt="{{ item.name }}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-semibold">{{ item.name }}</h5>
+                        <p class="card-text text-muted">{{ item.description[:100] }}...</p>
+
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                            <span class="h5 text-primary">₦{{ "%.2f"|format(item.price) }}</span>
+                            <form method="POST" action="{{ url_for('orders.add_to_cart') }}">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cart-plus me-1"></i> Add
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+
+<!-- ============================
+     WHY CHOOSE US
+============================= -->
+<section class="why-choose-us py-5 mt-4 bg-light">
+    <div class="container">
+        <div class="row g-4 text-center">
+
+            <div class="col-md-4 fade-in">
+                <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Fast Delivery</h4>
+                <p class="text-muted">We deliver hot and fresh right to your doorstep.</p>
+            </div>
+
+            <div class="col-md-4 fade-in">
+                <i class="fas fa-award fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Quality Ingredients</h4>
+                <p class="text-muted">Only the best and freshest ingredients.</p>
+            </div>
+
+            <div class="col-md-4 fade-in">
+                <i class="fas fa-heart fa-3x text-primary mb-3"></i>
+                <h4 class="fw-semibold">Made with Love</h4>
+                <p class="text-muted">Prepared by chefs who care.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

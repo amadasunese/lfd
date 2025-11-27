@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Menu Management - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Menu Management</h1>
+    
+    <!-- Add New Item Button -->
+    <div class="mb-3">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+            <i class="fas fa-plus"></i> Add New Menu Item
+        </button>
+    </div>
+    
+    <!-- Menu Items Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Prep Time</th>
+                            <th>Available</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <img src="{{ item.image_url or 'https://via.placeholder.com/50x50?text=' + item.name[0] }}" 
+                                     alt="{{ item.name }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                            </td>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ item.description[:50] }}...</small>
+                            </td>
+                            <td>{{ item.category.name }}</td>
+                            <td>₦{{ "%.2f"|format(item.price) }}</td>
+                            <td>{{ item.preparation_time }} min</td>
+                            <td>
+                                {% if item.is_available %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editItemModal{{ item.id }}">
+                                    Edit
+                                </button>
+                                <form method="POST" action="{{ url_for('admin.delete_menu_item', item_id=item.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        
+                        <!-- Edit Item Modal -->
+                        <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Menu Item</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.edit_menu_item', item_id=item.id) }}">
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="name{{ item.id }}" class="form-label">Name</label>
+                                                <input type="text" class="form-control" id="name{{ item.id }}" name="name" value="{{ item.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="description{{ item.id }}" class="form-label">Description</label>
+                                                <textarea class="form-control" id="description{{ item.id }}" name="description" rows="3">{{ item.description }}</textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="category_id{{ item.id }}" class="form-label">Category</label>
+                                                <select class="form-select" id="category_id{{ item.id }}" name="category_id" required>
+                                                    {% for category in categories %}
+                                                    <option value="{{ category.id }}" {% if category.id == item.category_id %}selected{% endif %}>
+                                                        {{ category.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="price{{ item.id }}" class="form-label">Price</label>
+                                                    <input type="number" class="form-control" id="price{{ item.id }}" name="price" value="{{ item.price }}" step="0.01" min="0" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="preparation_time{{ item.id }}" class="form-label">Prep Time (min)</label>
+                                                    <input type="number" class="form-control" id="preparation_time{{ item.id }}" name="preparation_time" value="{{ item.preparation_time }}" min="1" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="is_available{{ item.id }}" name="is_available" {% if item.is_available %}checked{% endif %}>
+                                                    <label class="form-check-label" for="is_available{{ item.id }}">
+                                                        Available
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Menu Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_menu_item') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="preparation_time" class="form-label">Prep Time (min)</label>
+                            <input type="number" class="form-control" id="preparation_time" name="preparation_time" value="15" min="1" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

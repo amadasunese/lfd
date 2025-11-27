@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center mb-4">Contact Us</h1>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-map-marker-alt fa-2x text-primary mb-3"></i>
+                            <h5>Visit Us</h5>
+                            <p>Success Junction, Off Upper Ekenwan Road<br>Ugbiyokho, Benin City, Edo State</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-phone fa-2x text-primary mb-3"></i>
+                            <h5>Call Us</h5>
+                            <p>009123147596<br>Monday - Saturday: 10 AM - 4 PM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Send us a message</h5>
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Your Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Follow Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="btn btn-outline-primary me-2">
+                            <i class="fab fa-facebook-f"></i> Facebook
+                        </a>
+                        <a href="#" class="btn btn-outline-info me-2">
+                            <i class="fab fa-twitter"></i> Twitter
+                        </a>
+                        <a href="https://www.instagram.com/swtlauracious/" class="btn btn-outline-danger">
+                            <i class="fab fa-instagram"></i> Instagram
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

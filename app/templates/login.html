@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2>Login</h2>
+                        <p class="text-muted">Welcome back to Lauracious Foodies Delight</p>
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                            <label class="form-check-label" for="remember_me">Remember me</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Don't have an account?</p>
+                            <a href="{{ url_for('auth.register') }}">Register here</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

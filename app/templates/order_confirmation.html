@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="text-success mb-3">Order Placed Successfully!</h2>
+                    <p class="lead">Thank you for your order. We've received your request and are preparing it with love.</p>
+                    
+                    <div class="alert alert-info mt-4">
+                        <h5>Order Details</h5>
+                        <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                        <p><strong>Total Amount:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+                        <p><strong>Estimated Delivery:</strong> {{ estimated_delivery.strftime('%H:%M') }}</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary me-2">Continue Shopping</a>
+                        <a href="{{ url_for('orders.my_orders') }}" class="btn btn-outline-primary">View My Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
