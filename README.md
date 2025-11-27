@@ -12,9 +12,3 @@ A comprehensive food vendor web application built with Flask, featuring online o
 - **Responsive Design**: Mobile-friendly interface
 - **Security**: Password hashing, CSRF protection, user authentication
 
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/lauracious-foodies.git
-cd lauracious-foodies
