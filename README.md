@@ -1,6 +1,6 @@
 # Lauracious Foodies Delight - Food Vendor Web Application
 
-A comprehensive food vendor web application built with Flask, featuring online ordering, menu management, and admin dashboard.
+A comprehensive food vendor web application, featuring online ordering, menu management, and admin dashboard.
 
 ## Features
 
