@@ -8,15 +8,9 @@
     
     <!-- Search and Filter -->
     <div class="row mb-4">
-        <div class="col-md-6 mb-2 mb-md-0">
+        <div class="col-md-6">
             <form method="GET" action="{{ url_for('menu.menu') }}" class="d-flex">
-                <input type="text"
-                       name="search"
-                       id="search-input"
-                       class="form-control me-2"
-                       placeholder="Search menu items..."
-                       value="{{ request.args.get('search', '') }}"
-                       autocomplete="off">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search menu items..." value="{{ request.args.get('search', '') }}">
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </div>
@@ -25,8 +19,7 @@
                 <select name="category" class="form-select me-2">
                     <option value="">All Categories</option>
                     {% for category in categories %}
-                    <option value="{{ category.id }}"
-                            {% if request.args.get('category')|int == category.id %}selected{% endif %}>
+                    <option value="{{ category.id }}" {% if request.args.get('category')|int == category.id %}selected{% endif %}>
                         {{ category.name }}
                     </option>
                     {% endfor %}
@@ -43,11 +36,7 @@
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100 shadow-sm menu-item-card">
                     <img src="{{ url_for('static', filename='images/menu/' ~ item.image_url) }}"
-                         class="card-img-top"
-                         alt="{{ item.name }}"
-                         style="height: 200px; object-fit: cover;"
-                         loading="lazy"
-                         decoding="async">
+                         class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ item.name }}</h5>
                         <p class="card-text flex-grow-1">{{ item.description }}</p>
@@ -55,22 +44,29 @@
                             <span class="h5 text-primary mb-0">₦{{ "%.2f"|format(item.price) }}</span>
                             <small class="text-muted">{{ item.preparation_time }} min</small>
                         </div>
+                        <!-- <form method="POST" action="{{ url_for('orders.add_to_cart') }}" class="d-flex">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <input type="number" name="quantity" class="form-control me-2" value="1" min="1" max="10" style="width: 80px;">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </form> -->
 
                         {% if item.id in in_cart_ids %}
-                            <a href="{{ url_for('orders.cart') }}" class="btn btn-success btn-add-cart">
+                              <a href="{{ url_for('orders.cart') }}" class="btn btn-success btn-add-cart">
                                 <i class="fas fa-check me-2"></i> View Cart
-                            </a>
-                        {% else %}
-                            <form method="POST"
-                                  action="{{ url_for('orders.add_to_cart') }}"
-                                  class="add-to-cart-form">
+                              </a>
+                            {% else %}
+                              <form method="POST" action="{{ url_for('orders.add_to_cart') }}" class="add-to-cart-form">
                                 <input type="hidden" name="item_id" value="{{ item.id }}">
                                 <input type="hidden" name="quantity" value="1">
                                 <button type="submit" class="btn btn-primary btn-add-cart">
-                                    <i class="fas fa-cart-plus me-2"></i> Add to Cart
+                                  <i class="fas fa-cart-plus me-2"></i> Add to Cart
                                 </button>
-                            </form>
-                        {% endif %}
+                              </form>
+                            {% endif %}
+
+
                     </div>
                 </div>
             </div>
@@ -85,4 +81,21 @@
         {% endif %}
     </div>
 </div>
+
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('submit', async (e) => {
+      const form = e.target.closest('.add-to-cart-form');
+      if (!form) return;
+  
+      e.preventDefault();                               // stop normal submit
+      const data = new FormData(form);
+      await fetch("{{ url_for('orders.add_to_cart') }}", {
+        method: 'POST',
+        body: data
+      });
+      location.reload();                               // or update DOM manually
+    });
+  });
+</script> -->
 {% endblock %}

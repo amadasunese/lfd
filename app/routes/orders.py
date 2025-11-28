@@ -17,6 +17,34 @@ def cart():
     return render_template('cart.html')
 
 
+# @bp.route('/add_to_cart', methods=['POST'])
+# @login_required
+# def add_to_cart():
+#     item_id = request.form.get('item_id')
+#     quantity = int(request.form.get('quantity', 1))
+
+#     item = MenuItem.query.get_or_404(item_id)
+
+#     # Here you would typically use a session or database to store cart items
+#     # For simplicity, we'll use a basic implementation
+#     if 'cart' not in session:
+#         session['cart'] = {}
+
+#     cart = session['cart']
+#     if str(item_id) in cart:
+#         cart[str(item_id)]['quantity'] += quantity
+#     else:
+#         cart[str(item_id)] = {
+#             'name': item.name,
+#             'price': item.price,
+#             'quantity': quantity
+#         }
+
+#     session['cart'] = cart
+
+#     flash(f'{item.name} added to cart!', 'success')
+#     return redirect(url_for('menu.menu'))
+
 @bp.route('/add_to_cart', methods=['POST'])
 @login_required
 def add_to_cart():
@@ -25,25 +53,39 @@ def add_to_cart():
 
     item = MenuItem.query.get_or_404(item_id)
 
-    # Here you would typically use a session or database to store cart items
-    # For simplicity, we'll use a basic implementation
-    if 'cart' not in session:
-        session['cart'] = {}
+    # Initialize cart if not present
+    cart = session.get('cart', {})
 
-    cart = session['cart']
+    # Add or update item
     if str(item_id) in cart:
         cart[str(item_id)]['quantity'] += quantity
     else:
         cart[str(item_id)] = {
             'name': item.name,
-            'price': item.price,
+            'price': float(item.price),   # Ensure JSON serializable
             'quantity': quantity
         }
 
+    # Save updated cart
     session['cart'] = cart
 
+    # Calculate total items in cart
+    cart_count = sum(item['quantity'] for item in cart.values())
+
+    # --- AJAX REQUEST (for frontend JS) ---
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': True,
+            'message': f'{item.name} added to cart!',
+            'cart_count': cart_count
+        }), 200
+
+    # --- Normal browser request (fallback) ---
     flash(f'{item.name} added to cart!', 'success')
     return redirect(url_for('menu.menu'))
+
+
+
 
 @bp.route('/update_cart', methods=['POST'])
 @login_required
