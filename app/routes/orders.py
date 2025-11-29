@@ -234,6 +234,7 @@ def create_order():
         total_amount = total,
         status       = 'pending',
         payment_method = 'pending',
+        payment_status = 'pending',  # <-- ADD THIS
         delivery_address = request.form.get('delivery_address', ''),
         phone_number     = request.form.get('phone_number', ''),
         notes            = request.form.get('notes', ''),
