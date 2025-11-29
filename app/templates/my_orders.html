@@ -63,10 +63,10 @@
                                 </form>
                             {% endif %}
 
-                            {% if order.status in ['pending', 'confirmed'] %}
+                            {% if order.status in ['pending', 'confirmed'] and order.payment_status != 'paid' %}
                             <form method="POST" action="{{ url_for('orders.cancel_order', order_id=order.id) }}" 
-                                  class="d-inline" 
-                                  onsubmit="return confirm('Cancel this order?');">
+                                class="d-inline" 
+                                onsubmit="return confirm('Cancel this order?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-times"></i> Cancel
                                 </button>

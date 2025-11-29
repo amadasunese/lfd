@@ -164,31 +164,67 @@ def track_order(order_number):
 
 
 
+# @bp.route('/cancel_order/<int:order_id>', methods=['POST'])
+# @login_required
+# def cancel_order(order_id):
+#     order = Order.query.get_or_404(order_id)
+
+#     if order.customer_id != current_user.id:
+#         flash('Access denied', 'danger')
+#         return redirect(url_for('main.index'))
+
+#     if order.status not in ['pending', 'confirmed']:
+#         flash('This order cannot be cancelled', 'warning')
+#         return redirect(url_for('orders.my_orders'))
+
+#     old_status = order.status
+#     order.status = 'cancelled'
+#     db.session.commit()
+
+#     # Send status update email
+#     try:
+#         send_order_status_update_email(order, old_status, 'cancelled')
+#     except Exception as e:
+#         current_app.logger.error(f"Failed to send order status update email: {e}")
+
+#     flash('Order cancelled successfully', 'success')
+#     return redirect(url_for('orders.my_orders'))
+
 @bp.route('/cancel_order/<int:order_id>', methods=['POST'])
 @login_required
 def cancel_order(order_id):
     order = Order.query.get_or_404(order_id)
 
-    if order.customer_id != current_user.id:
+    # Only owner OR admin can access
+    if order.customer_id != current_user.id and not current_user.is_admin:
         flash('Access denied', 'danger')
         return redirect(url_for('main.index'))
 
+    # If USER (not admin) tries to cancel a PAID order → block it
+    if not current_user.is_admin and order.payment_status == 'paid':
+        flash('You cannot cancel a paid order. Please contact support.', 'danger')
+        return redirect(url_for('orders.my_orders'))
+
+    # Order must be in a cancellable state
     if order.status not in ['pending', 'confirmed']:
         flash('This order cannot be cancelled', 'warning')
         return redirect(url_for('orders.my_orders'))
 
     old_status = order.status
     order.status = 'cancelled'
+    order.updated_at = datetime.utcnow()
+
     db.session.commit()
 
     # Send status update email
     try:
         send_order_status_update_email(order, old_status, 'cancelled')
     except Exception as e:
-        current_app.logger.error(f"Failed to send order status update email: {e}")
+        current_app.logger.error(f"Failed to send order cancellation email: {e}")
 
     flash('Order cancelled successfully', 'success')
-    return redirect(url_for('orders.my_orders'))
+    return redirect(url_for('orders.my_orders' if not current_user.is_admin else 'admin.orders'))
+
 
 
 @bp.route('/update_order_status/<int:order_id>', methods=['POST'])

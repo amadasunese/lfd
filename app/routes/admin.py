@@ -6,6 +6,7 @@ import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 from app.utils.email import send_order_status_update_email
+from werkzeug.security import generate_password_hash, check_password_hash
 
 bp = Blueprint('admin', __name__)
 
@@ -15,6 +16,72 @@ def require_admin():
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
+
+@bp.route('/users')
+@login_required
+def users():
+    if not current_user.is_admin:
+        flash("Access denied", "danger")
+        return redirect(url_for('main.index'))
+
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/users.html', users=users)
+
+
+@bp.route('/users/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    if not current_user.is_admin:
+        flash("Access denied", "danger")
+        return redirect(url_for('main.index'))
+
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        user.first_name = request.form.get('first_name')
+        user.last_name = request.form.get('last_name')
+        user.email = request.form.get('email')
+        user.phone = request.form.get('phone')
+        user.address = request.form.get('address')
+        user.is_admin = True if request.form.get('role') == 'admin' else False
+
+        # Optional password change
+        new_password = request.form.get('password')
+        if new_password:
+            user.password_hash = generate_password_hash(new_password)
+
+        db.session.commit()
+        flash("User updated successfully!", "success")
+        return redirect(url_for('admin.users'))
+
+    return render_template('admin/edit_user.html', user=user)
+
+
+@bp.route('/users/delete/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash("Access denied", "danger")
+        return redirect(url_for('main.index'))
+
+    user = User.query.get_or_404(user_id)
+
+    # Safety rules
+    if user.id == current_user.id:
+        flash("You cannot delete your own account!", "warning")
+        return redirect(url_for('admin.users'))
+
+    if user.is_admin:
+        flash("You cannot delete another admin!", "danger")
+        return redirect(url_for('admin.users'))
+
+    db.session.delete(user)
+    db.session.commit()
+
+    flash("User deleted successfully!", "success")
+    return redirect(url_for('admin.users'))
+
+
 
 @bp.route('/dashboard')
 def dashboard():
@@ -38,27 +105,7 @@ def menu_management():
     categories = Category.query.all()
     return render_template('admin/menu_management.html', items=items, categories=categories)
 
-# @bp.route('/add_menu_item', methods=['POST'])
-# def add_menu_item():
-#     name = request.form.get('name')
-#     description = request.form.get('description')
-#     price = float(request.form.get('price'))
-#     category_id = int(request.form.get('category_id'))
-#     preparation_time = int(request.form.get('preparation_time', 15))
-    
-#     item = MenuItem(
-#         name=name,
-#         description=description,
-#         price=price,
-#         category_id=category_id,
-#         preparation_time=preparation_time
-#     )
-    
-#     db.session.add(item)
-#     db.session.commit()
-    
-#     flash('Menu item added successfully!', 'success')
-#     return redirect(url_for('admin.menu_management'))
+
 
 @bp.route('/add_menu_item', methods=['POST'])
 def add_menu_item():
@@ -211,13 +258,31 @@ def update_order_status(order_id):
     return redirect(url_for('admin.orders'))
 
 
+# @bp.route('/delete_order/<int:order_id>', methods=['POST'])
+# def delete_order(order_id):
+#     order = Order.query.get_or_404(order_id)
+#     db.session.delete(order)
+#     db.session.commit()
+#     flash('Order deleted successfully!', 'success')
+#     return redirect(url_for('admin.orders'))
+
+
 @bp.route('/delete_order/<int:order_id>', methods=['POST'])
 def delete_order(order_id):
     order = Order.query.get_or_404(order_id)
+
+    # ❌ Prevent deleting paid orders
+    if order.payment_status == 'paid':
+        flash('Paid orders cannot be deleted. You may only cancel or archive them.', 'danger')
+        return redirect(url_for('admin.orders'))
+
+    # Proceed to delete
     db.session.delete(order)
     db.session.commit()
+
     flash('Order deleted successfully!', 'success')
     return redirect(url_for('admin.orders'))
+
 
 
 @bp.route("/order_items/<int:order_id>")
