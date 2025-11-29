@@ -125,24 +125,10 @@ The Lauracious Foodies Delight Team
     send_email(recipients[0], subject, html_body, is_html=True)
 
 
+
 def send_order_status_update_email(order, old_status, new_status):
     subject = f'Order Status Update - {order.order_number}'
-    recipients = [order.customer.email]
-
-    text_body = f'''
-Dear {order.customer.first_name},
-
-Your order status has been updated!
-
-Order Number: {order.order_number}
-Previous Status: {old_status.title()}
-New Status: {new_status.title()}
-
-Thank you for choosing Lauracious Foodies Delight!
-
-Best regards,
-The Lauracious Foodies Delight Team
-'''
+    recipient = order.customer.email
 
     html_body = render_template_string('''
 <!DOCTYPE html>
@@ -182,5 +168,10 @@ The Lauracious Foodies Delight Team
 </html>
     ''', order=order, old_status=old_status, new_status=new_status)
 
-    # Send email via Gmail SMTP
-    send_email(recipients[0], subject, html_body, is_html=True)
+    try:
+        # send_email(to, subject, body, is_html)
+        success, _ = send_email(recipient, subject, html_body, is_html=True)
+        return success
+    except Exception as e:
+        current_app.logger.exception(f"Failed to send order status email: {e}")
+        return False

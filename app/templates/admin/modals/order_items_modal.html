@@ -1,0 +1,20 @@
+<div class="modal-header">
+    <h5 class="modal-title">Order Items - {{ order.order_number }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    {% for item in order.order_items %}
+    <div class="d-flex justify-content-between mb-2">
+        <div>
+            <strong>{{ item.menu_item.name }}</strong><br>
+            <small class="text-muted">₦{{ "%.2f"|format(item.unit_price) }} each</small>
+        </div>
+        <div class="text-end">
+            Qty: {{ item.quantity }} <br>
+            <strong>₦{{ "%.2f"|format(item.subtotal) }}</strong>
+        </div>
+    </div>
+    {% if not loop.last %}<hr>{% endif %}
+    {% endfor %}
+</div>

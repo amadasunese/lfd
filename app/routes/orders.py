@@ -374,3 +374,7 @@ def confirm_cash_order(order_id):
     db.session.commit()
     flash('Order placed – pay cash on delivery!', 'success')
     return redirect(url_for('orders.order_confirmation', order_id=order.id))
+
+
+
+
