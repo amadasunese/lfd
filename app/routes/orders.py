@@ -320,6 +320,31 @@ def pay_with_paystack():
 
 
 # ---------- 3.  PAYSTACK RETURN URL ----------
+# @bp.route('/pay/callback')
+# @login_required
+# def paystack_callback():
+#     ref = request.args.get('reference')
+#     if not ref:
+#         flash('No reference returned', 'warning')
+#         return redirect(url_for('orders.my_orders'))
+
+#     # ✅ Use Transaction.verify instead of paystack.verify_transaction
+#     resp = Transaction.verify(reference=ref)
+
+#     if resp['status'] and resp['data']['status'] == 'success':
+#         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
+#         order.status = 'confirmed'
+#         db.session.commit()
+
+#         # Clear cart after confirming payment
+#         session.pop('cart', None)
+
+#         flash('Payment successful! Your order is confirmed.', 'success')
+#         return redirect(url_for('orders.order_confirmation', order_id=order.id))
+
+#     flash('Payment failed or cancelled', 'warning')
+#     return redirect(url_for('orders.my_orders'))
+
 @bp.route('/pay/callback')
 @login_required
 def paystack_callback():
@@ -328,19 +353,30 @@ def paystack_callback():
         flash('No reference returned', 'warning')
         return redirect(url_for('orders.my_orders'))
 
-    # ✅ Use Transaction.verify instead of paystack.verify_transaction
     resp = Transaction.verify(reference=ref)
 
     if resp['status'] and resp['data']['status'] == 'success':
         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
+
+        old_status = order.status
+
         order.status = 'confirmed'
-        order.payment_status = 'confirmed'
+        order.payment_status = 'paid'
+        order.payment_method = 'paystack'
+        order.updated_at = datetime.utcnow()
+
         db.session.commit()
 
-        # Clear cart after confirming payment
+        # Optional: notify user
+        try:
+            send_order_status_update_email(order, old_status, 'confirmed')
+        except Exception as e:
+            current_app.logger.error(f"Status email failed: {e}")
+
+        # Clean cart
         session.pop('cart', None)
 
-        flash('Payment successful! Your order is confirmed.', 'success')
+        flash('Payment successful! Your order is now confirmed and paid.', 'success')
         return redirect(url_for('orders.order_confirmation', order_id=order.id))
 
     flash('Payment failed or cancelled', 'warning')
@@ -348,21 +384,60 @@ def paystack_callback():
 
 
 # ---------- 4.  WEBHOOK (server→server) ----------
+# @bp.route('/pay/webhook', methods=['POST'])
+# def paystack_webhook():
+#     sig = request.headers.get('x-paystack-signature')
+#     if not hmac.new(current_app.config['PAYSTACK_SECRET_KEY'].encode(),
+#                     request.data, hashlib.sha512).hexdigest() == sig:
+#         return 'bad signature', 400
+
+#     event = request.get_json(force=True)
+#     if event['event'] == 'charge.success':
+#         order = Order.query.filter_by(paystack_ref=event['data']['reference']).first()
+#         if order and order.payment_status == 'pending':
+#             order.payment_status = 'paid'
+#             order.status = 'confirmed'
+#             db.session.commit()
+#     return 'ok', 200
+
 @bp.route('/pay/webhook', methods=['POST'])
 def paystack_webhook():
     sig = request.headers.get('x-paystack-signature')
-    if not hmac.new(current_app.config['PAYSTACK_SECRET_KEY'].encode(),
-                    request.data, hashlib.sha512).hexdigest() == sig:
-        return 'bad signature', 400
 
-    event = request.get_json(force=True)
-    if event['event'] == 'charge.success':
-        order = Order.query.filter_by(paystack_ref=event['data']['reference']).first()
-        if order and order.payment_status == 'pending':
+    computed_sig = hmac.new(
+        current_app.config['PAYSTACK_SECRET_KEY'].encode(),
+        request.data,
+        hashlib.sha512
+    ).hexdigest()
+
+    if computed_sig != sig:
+        return 'invalid signature', 400
+
+    event = request.get_json()
+
+    # Only process successful charges
+    if event.get('event') == 'charge.success':
+        ref = event['data']['reference']
+        order = Order.query.filter_by(paystack_ref=ref).first()
+
+        if order:
+            old_status = order.status
+
             order.payment_status = 'paid'
+            order.payment_method = 'paystack'
             order.status = 'confirmed'
+            order.updated_at = datetime.utcnow()
+
             db.session.commit()
+
+            # Optional: email notification
+            try:
+                send_order_status_update_email(order, old_status, 'confirmed')
+            except Exception as e:
+                current_app.logger.error(f"Webhook email error: {e}")
+
     return 'ok', 200
+
 
 @bp.route('/checkout/cash/<int:order_id>', methods=['POST'])
 @login_required

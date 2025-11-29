@@ -175,3 +175,29 @@ def send_order_status_update_email(order, old_status, new_status):
     except Exception as e:
         current_app.logger.exception(f"Failed to send order status email: {e}")
         return False
+    
+
+
+def send_invoice_email(order):
+    subject = f"Invoice for Order {order.order_number}"
+    to = order.customer.email
+
+    html_body = render_template_string("""
+    <h2>Your Invoice is Ready</h2>
+    <p>Thank you for your payment. Below is your invoice:</p>
+
+    <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+    <p><strong>Total Paid:</strong> ₦{{ "%.2f"|format(order.total_amount) }}</p>
+    <p><strong>Payment Method:</strong> {{ order.payment_method.title() }}</p>
+
+    <h3>Items</h3>
+    <ul>
+        {% for item in order.order_items %}
+            <li>{{ item.quantity }}× {{ item.menu_item.name }} — ₦{{ "%.2f"|format(item.subtotal) }}</li>
+        {% endfor %}
+    </ul>
+
+    <p>Best regards,<br>Lauracious Foodies Delight</p>
+    """, order=order)
+
+    return send_email(to, subject, html_body, is_html=True)
