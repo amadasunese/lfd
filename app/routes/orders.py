@@ -1,5 +1,5 @@
 import time
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app, jsonify
 from flask_login import login_required, current_user
 from app.models import Order, OrderItem, MenuItem
 from app.models import db
@@ -16,34 +16,6 @@ bp = Blueprint('orders', __name__)
 def cart():
     return render_template('cart.html')
 
-
-# @bp.route('/add_to_cart', methods=['POST'])
-# @login_required
-# def add_to_cart():
-#     item_id = request.form.get('item_id')
-#     quantity = int(request.form.get('quantity', 1))
-
-#     item = MenuItem.query.get_or_404(item_id)
-
-#     # Here you would typically use a session or database to store cart items
-#     # For simplicity, we'll use a basic implementation
-#     if 'cart' not in session:
-#         session['cart'] = {}
-
-#     cart = session['cart']
-#     if str(item_id) in cart:
-#         cart[str(item_id)]['quantity'] += quantity
-#     else:
-#         cart[str(item_id)] = {
-#             'name': item.name,
-#             'price': item.price,
-#             'quantity': quantity
-#         }
-
-#     session['cart'] = cart
-
-#     flash(f'{item.name} added to cart!', 'success')
-#     return redirect(url_for('menu.menu'))
 
 @bp.route('/add_to_cart', methods=['POST'])
 @login_required
@@ -348,30 +320,6 @@ def pay_with_paystack():
 
 
 # ---------- 3.  PAYSTACK RETURN URL ----------
-# @bp.route('/pay/callback')
-# @login_required
-# def paystack_callback():
-#     ref = request.args.get('reference')
-#     if not ref:
-#         flash('No reference returned', 'warning')
-#         return redirect(url_for('orders.my_orders'))
-
-#     resp = paystack.verify_transaction(ref)
-
-#     if resp['status'] and resp['data']['status'] == 'success':
-#         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
-#         order.status = 'confirmed'
-#         db.session.commit()
-
-#         # ✅ Clear cart HERE after confirming payment with Paystack
-#         session.pop('cart', None)
-
-#         flash('Payment successful! Your order is confirmed.', 'success')
-#         return redirect(url_for('orders.order_confirmation', order_id=order.id))
-
-#     flash('Payment failed or cancelled', 'warning')
-#     return redirect(url_for('orders.my_orders'))
-
 @bp.route('/pay/callback')
 @login_required
 def paystack_callback():
@@ -414,32 +362,6 @@ def paystack_webhook():
             order.status = 'confirmed'
             db.session.commit()
     return 'ok', 200
-
-# @bp.route('/pay/webhook', methods=['POST'])
-# def paystack_webhook():
-#     json_input = request.get_json(force=True)
-#     signature = request.headers.get('x-paystack-signature')
-
-#     if not _valid_signature(request.data, signature):
-#         return 'invalid signature', 400
-
-#     event = json_input.get("event")
-#     data = json_input.get("data", {})
-
-#     if event == "charge.success":
-#         reference = data.get("reference")
-#         order = Order.query.filter_by(paystack_ref=reference).first()
-
-#         if order and order.status == "pending":
-#             order.status = "confirmed"
-#             order.updated_at = datetime.utcnow()
-#             db.session.commit()
-
-#             # ✅ CLEAR CART ONLY NOW (successful payment)
-#             session.pop("cart", None)
-
-#     return "ok", 200
-
 
 @bp.route('/checkout/cash/<int:order_id>', methods=['POST'])
 @login_required
