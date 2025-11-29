@@ -334,6 +334,7 @@ def paystack_callback():
     if resp['status'] and resp['data']['status'] == 'success':
         order = Order.query.filter_by(paystack_ref=ref).first_or_404()
         order.status = 'confirmed'
+        order.payment_status = 'confirmed'
         db.session.commit()
 
         # Clear cart after confirming payment
