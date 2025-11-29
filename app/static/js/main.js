@@ -345,3 +345,24 @@
         debounce
     };
 })();
+
+
+document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".load-modal");
+    if (!btn) return;
+
+    const orderId = btn.dataset.id;
+    const type = btn.dataset.type; // items | details
+    const url = type === "items"
+        ? `/admin/order_items/${orderId}`
+        : `/admin/order_details/${orderId}`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("modalContent").innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById("globalModal"));
+            modal.show();
+        })
+        .catch(err => alert("Error loading modal"));
+});
