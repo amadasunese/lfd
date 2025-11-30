@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Delivery Zones{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Delivery Zones – Benin City</h4>
+
+<a class="btn btn-primary btn-sm mb-3" href="{{ url_for('admin_delivery.add') }}">+ Add Zone</a>
+
+<table class="table table-bordered table-striped align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Name</th>
+      <th>Fee (₦)</th>
+      <th>ETA</th>
+      <th style="width: 180px;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for z in zones %}
+    <tr>
+      <td>{{ z.name }}</td>
+      <td>₦{{ z.fee }}</td>
+      <td>{{ z.eta or "Not Set" }}</td>
+
+      <td>
+        <a class="btn btn-warning btn-sm" href="{{ url_for('admin_delivery.edit', zone_id=z.id) }}">
+          Edit
+        </a>
+
+        <form class="d-inline" method="POST"
+              action="{{ url_for('admin_delivery.delete', zone_id=z.id) }}"
+              onsubmit="return confirm('Delete this delivery zone?')">
+          <button class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

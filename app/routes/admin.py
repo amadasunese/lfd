@@ -1,12 +1,15 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
-from app.models import MenuItem, Category, Order, User
+from app.models import MenuItem, Category, Order, User, Coupon, DeliveryZone
 from app import db
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 from app.utils.email import send_order_status_update_email
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
+
 
 bp = Blueprint('admin', __name__)
 
@@ -297,3 +300,222 @@ def order_items_modal(order_id):
 def order_details_modal(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template("admin/modals/order_details_modal.html", order=order)
+
+
+
+
+
+@bp.route('/coupons')
+@login_required
+def coupons_list():
+    # ensure current_user.is_admin check in real app
+    coupons = Coupon.query.order_by(Coupon.created_at.desc()).all()
+    return render_template('admin/coupons/list.html', coupons=coupons)
+
+# @bp.route('/coupons/create', methods=['GET', 'POST'])
+# @login_required
+# def coupon_create():
+#     if request.method == 'POST':
+#         code = request.form.get('code', '').strip().upper()
+#         coupon_type = request.form.get('coupon_type', 'percent')
+#         amount = float(request.form.get('amount', 0))
+#         starts_at = request.form.get('starts_at') or None
+#         expires_at = request.form.get('expires_at') or None
+#         min_subtotal = request.form.get('min_subtotal') or None
+#         max_uses = request.form.get('max_uses') or None
+#         max_uses_per_user = request.form.get('max_uses_per_user') or None
+#         selected_zones = request.form.getlist('zones')
+#         note = request.form.get('note')
+        
+#         for zid in selected_zones:
+#             zone = DeliveryZone.query.get(int(zid))
+#             if zone:
+#                 coupon.zones.append(zone)
+
+#         # parse datetimes
+#         if starts_at:
+#             starts_at = datetime.fromisoformat(starts_at)
+#         if expires_at:
+#             expires_at = datetime.fromisoformat(expires_at)
+
+#         # validation
+#         if not code:
+#             flash('Coupon code is required', 'danger')
+#             return redirect(url_for('admin.coupon_create'))
+
+#         # uniqueness
+#         if Coupon.query.filter_by(code=code).first():
+#             flash('A coupon with that code already exists', 'danger')
+#             return redirect(url_for('admin.coupon_create'))
+
+#         coupon = Coupon(
+#             code=code,
+#             coupon_type=coupon_type,
+#             amount=amount,
+#             starts_at=starts_at,
+#             expires_at=expires_at,
+#             min_subtotal=float(min_subtotal) if min_subtotal else None,
+#             max_uses=int(max_uses) if max_uses else None,
+#             max_uses_per_user=int(max_uses_per_user) if max_uses_per_user else None,
+#             is_active=True,
+#             created_by=current_user.id,
+#             note=note
+#         )
+#         db.session.add(coupon)
+#         db.session.commit()
+#         flash('Coupon created', 'success')
+#         return redirect(url_for('admin.coupons_list'))
+
+#     return render_template('admin/coupons/create.html')
+
+
+@bp.route('/coupons/create', methods=['GET', 'POST'])
+@login_required
+def coupon_create():
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip().upper()
+        coupon_type = request.form.get('coupon_type', 'percent')
+        amount = float(request.form.get('amount', 0))
+
+        starts_at = request.form.get('starts_at') or None
+        expires_at = request.form.get('expires_at') or None
+
+        min_subtotal = request.form.get('min_subtotal') or None
+        max_uses = request.form.get('max_uses') or None
+        max_uses_per_user = request.form.get('max_uses_per_user') or None
+
+        selected_zones = request.form.getlist('zones')
+        note = request.form.get('note')
+
+        # Parse datetime
+        if starts_at:
+            starts_at = datetime.fromisoformat(starts_at)
+        if expires_at:
+            expires_at = datetime.fromisoformat(expires_at)
+
+        # Validation
+        if not code:
+            flash('Coupon code is required', 'danger')
+            return redirect(url_for('admin.coupon_create'))
+
+        # Uniqueness check
+        if Coupon.query.filter_by(code=code).first():
+            flash('A coupon with that code already exists', 'danger')
+            return redirect(url_for('admin.coupon_create'))
+
+        # Create coupon record
+        coupon = Coupon(
+            code=code,
+            coupon_type=coupon_type,
+            amount=amount,
+            starts_at=starts_at,
+            expires_at=expires_at,
+            min_subtotal=float(min_subtotal) if min_subtotal else None,
+            max_uses=int(max_uses) if max_uses else None,
+            max_uses_per_user=int(max_uses_per_user) if max_uses_per_user else None,
+            is_active=True,
+            created_by=current_user.id,
+            note=note
+        )
+
+        db.session.add(coupon)
+        db.session.flush()   # make coupon.id available
+
+        # Assign delivery zones
+        for zid in selected_zones:
+            zone = DeliveryZone.query.get(int(zid))
+            if zone:
+                coupon.zones.append(zone)
+
+        db.session.commit()
+
+        flash('Coupon created', 'success')
+        return redirect(url_for('admin.coupons_list'))
+
+    zones = DeliveryZone.query.order_by(DeliveryZone.name).all()
+    return render_template('admin/coupons/create.html', zones=zones)
+
+
+
+
+@bp.route('/coupons/delete/<int:coupon_id>', methods=['POST'])
+@login_required
+def coupon_delete(coupon_id):
+    coupon = Coupon.query.get_or_404(coupon_id)
+    db.session.delete(coupon)
+    db.session.commit()
+    flash("Coupon deleted successfully", "success")
+    return redirect(url_for('admin.coupons_list'))
+
+
+@bp.route('/coupons/toggle/<int:coupon_id>', methods=['POST'])
+@login_required
+def coupon_toggle(coupon_id):
+    coupon = Coupon.query.get_or_404(coupon_id)
+    coupon.is_active = not coupon.is_active
+    db.session.commit()
+
+    flash(f"Coupon {'activated' if coupon.is_active else 'deactivated'}", "success")
+    return redirect(url_for('admin.coupons_list'))
+
+
+
+@bp.route('/coupons/edit/<int:coupon_id>', methods=['GET', 'POST'])
+@login_required
+def coupon_edit(coupon_id):
+    # Make sure only admin can access (optional)
+    # if not current_user.is_admin:
+    #     abort(403)
+
+    coupon = Coupon.query.get_or_404(coupon_id)
+    zones = DeliveryZone.query.order_by(DeliveryZone.name).all()
+
+    # Preload selected zone IDs for the template
+    selected_zones = [z.id for z in coupon.zones]
+
+    if request.method == 'POST':
+        coupon.coupon_type = request.form.get('coupon_type', 'percent')
+        coupon.amount = float(request.form.get('amount', 0))
+
+        starts_at = request.form.get('starts_at') or None
+        expires_at = request.form.get('expires_at') or None
+
+        if starts_at:
+            coupon.starts_at = datetime.fromisoformat(starts_at)
+        else:
+            coupon.starts_at = None
+
+        if expires_at:
+            coupon.expires_at = datetime.fromisoformat(expires_at)
+        else:
+            coupon.expires_at = None
+
+        min_subtotal = request.form.get('min_subtotal')
+        coupon.min_subtotal = float(min_subtotal) if min_subtotal else None
+
+        max_uses = request.form.get('max_uses')
+        coupon.max_uses = int(max_uses) if max_uses else None
+
+        max_uses_per_user = request.form.get('max_uses_per_user')
+        coupon.max_uses_per_user = int(max_uses_per_user) if max_uses_per_user else None
+
+        coupon.note = request.form.get('note')
+
+        # Update delivery zone restrictions
+        coupon.zones.clear()
+        selected = request.form.getlist('zones')
+        for zid in selected:
+            zone = DeliveryZone.query.get(int(zid))
+            if zone:
+                coupon.zones.append(zone)
+
+        db.session.commit()
+        flash('Coupon updated successfully', 'success')
+        return redirect(url_for('admin.coupons_list'))
+
+    return render_template(
+        'admin/coupons/edit.html',
+        coupon=coupon,
+        zones=zones,
+        selected_zones=selected_zones
+    )

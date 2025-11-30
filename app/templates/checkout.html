@@ -1,117 +1,276 @@
 {% extends "base.html" %}
-
 {% block title %}Checkout - Lauracious Foodies Delight{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mb-4">Checkout</h1>
-    
-    <div class="row">
-        <div class="col-lg-8">
-  <!-- A.  CREATE ORDER FIRST -->
-  <form method="POST" action="{{ url_for('orders.create_order') }}" id="deliveryForm">
-    <div class="card mb-4">
-      <div class="card-header"><h5 class="mb-0">Delivery Information</h5></div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">First Name</label>
-            <input type="text" class="form-control" name="first_name" value="{{ current_user.first_name }}" required>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Last Name</label>
-            <input type="text" class="form-control" name="last_name" value="{{ current_user.last_name }}" required>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-control" name="phone_number" value="{{ current_user.phone or '' }}" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Delivery Address</label>
-          <textarea class="form-control" name="delivery_address" rows="3" required>{{ current_user.address or '' }}</textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Additional Notes</label>
-          <textarea class="form-control" name="notes" rows="2" placeholder="Optional"></textarea>
-        </div>
-      </div>
-    </div>
-    <button type="submit" class="btn btn-primary btn-lg w-100">Continue to Payment</button>
-  </form>
+<div class="container py-4">
+  <h2 class="fw-bold mb-4">Checkout</h2>
 
-  <!-- B.  PAYMENT CHOICE (only after order exists) -->
-  {% if order %}
-  <div class="card mb-4 mt-4">
-    <div class="card-header"><h5 class="mb-0">Payment Method</h5></div>
-    <div class="card-body">
+  <div class="row">
+    <!-- LEFT: Delivery / Payment -->
+    <div class="col-lg-7">
 
-      <!-- Paystack Online -->
-      <div class="card mb-3">
-        <div class="card-header">Pay Online (Card, Bank, USSD …)</div>
-        <div class="card-body">
-            <form action="{{ url_for('orders.pay_with_paystack') }}" method="POST">
-                <input type="hidden" name="order_id" value="{{ order.id }}">
-                <button type="submit" class="btn btn-primary w-100">
-                  <i class="fab fa-stripe-s me-2"></i>Pay with Paystack
-                </button>
-              </form>
+      {% if not order %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">1. Delivery Information</h5>
         </div>
-      </div>
 
-      <!-- Cash on Delivery fallback -->
-      <form action="{{ url_for('orders.confirm_cash_order', order_id=order.id) }}" method="POST">
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="radio" name="payment_method" value="cash" checked>
-          <label class="form-check-label">Cash on Delivery</label>
-        </div>
-        <button type="submit" class="btn btn-outline-primary w-100">Place Cash Order</button>
-      </form>
-
-    </div>
-  </div>
-  {% endif %}
-</div>
-        
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    {% if session.get('cart') %}
-                        {% for item_id, item in session.cart.items() %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{{ item.name }} x {{ item.quantity }}</span>
-                            <span>₦{{ "%.2f"|format(item.price * item.quantity) }}</span>
-                        </div>
-                        {% endfor %}
-                        <hr>
-                        {% set subtotal = namespace(value=0) %}
-                        {% for item_id, item in session.cart.items() %}
-                            {% set subtotal.value = subtotal.value + (item.price * item.quantity) %}
-                        {% endfor %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Subtotal:</span>
-                            <span>₦{{ "%.2f"|format(subtotal.value) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Delivery Fee:</span>
-                            <span>₦{{ "%.2f"|format(2.99) }}</span>
-                          </div>
-                          <div class="d-flex justify-content-between mb-2">
-                            <span>Tax:</span>
-                            <span>₦{{ "%.2f"|format(subtotal.value * 0.08) }}</span>
-                          </div>
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold">
-                            <span>Total:</span>
-                            <span>₦{{ "%.2f"|format(subtotal.value + 2.99 + (subtotal.value * 0.08)) }}</span>
-                        </div>
-                    {% endif %}
-                </div>
+        <form method="POST" action="{{ url_for('orders.create_order') }}" id="deliveryForm">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">First Name</label>
+                <input class="form-control" value="{{ current_user.first_name }}" disabled>
+                <input type="hidden" name="first_name" value="{{ current_user.first_name }}">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Last Name</label>
+                <input class="form-control" value="{{ current_user.last_name }}" disabled>
+                <input type="hidden" name="last_name" value="{{ current_user.last_name }}">
+              </div>
             </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" name="phone_number" class="form-control" value="{{ current_user.phone or '' }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Delivery Address</label>
+              <textarea name="delivery_address" class="form-control" rows="3" required>{{ delivery_address or '' }}</textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Delivery Area</label>
+              <select class="form-select" id="delivery_zone" name="delivery_zone" required onchange="updateZoneFee()">
+                <option value="">-- Select Area --</option>
+                {% for z in zones %}
+                <option value="{{ z.id }}" data-fee="{{ z.fee }}" data-eta="{{ z.eta or '' }}">{{ z.name }} (₦{{ z.fee }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Notes (Optional)</label>
+              <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Continue to Payment</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+
+      {% if order %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">3. Payment Method</h5>
         </div>
+        <div class="card-body">
+          <div class="alert alert-info">
+            <strong>Review your order before paying.</strong><br>
+            Estimated Delivery: <strong>{{ estimated_time or '—' }}</strong>
+          </div>
+
+          <!-- Paystack -->
+          <div class="card border mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center bg-light">
+              <div class="form-check d-flex align-items-center gap-2">
+                <input type="radio" class="form-check-input payment-option" name="pay_method" data-target="paystackPanel">
+                <label class="form-check-label fw-semibold">Pay Online (Paystack)</label>
+              </div>
+              <!-- <img src="{{ url_for('static', filename='img/paystack.png') }}" alt="Paystack" style="height:30px;"> -->
+            </div>
+            <div class="collapse payment-panel" id="paystackPanel">
+              <div class="card-body">
+                <form method="POST" action="{{ url_for('orders.pay_with_paystack') }}">
+                  <input type="hidden" name="order_id" value="{{ order.id }}">
+                  <button class="btn btn-primary w-100">
+                    <!-- <img src="{{ url_for('static', filename='img/paystack.png') }}" style="height:18px; margin-right:8px;"> -->
+                    Pay with Paystack
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cash on Delivery -->
+          <div class="card border">
+            <div class="card-header d-flex justify-content-between align-items-center bg-light">
+              <div class="form-check d-flex align-items-center gap-2">
+                <input type="radio" class="form-check-input payment-option" name="pay_method" data-target="codPanel">
+                <label class="form-check-label fw-semibold">Cash on Delivery</label>
+              </div>
+              <!-- <img src="{{ url_for('static', filename='img/cod.png') }}" alt="Cash on Delivery" style="height:30px;"> -->
+            </div>
+            <div class="collapse payment-panel" id="codPanel">
+              <div class="card-body">
+                <form method="POST" action="{{ url_for('orders.confirm_cash_order', order_id=order.id) }}">
+                  <button class="btn btn-outline-primary w-100">Place Cash Order</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      {% endif %}
+
     </div>
+
+
+    <!-- RIGHT: Order Summary -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm position-sticky" style="top:75px;">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">2. Order Summary</h5>
+        </div>
+
+        <div class="card-body">
+          {% set subtotal = namespace(value=0) %}
+
+          {% if order %}
+            {% for item in order.order_items.all() %}
+              {% set subtotal.value = subtotal.value + (item.unit_price * item.quantity) %}
+              <div class="d-flex justify-content-between mb-2">
+                <span>{{ item.menu_item.name }} × {{ item.quantity }}</span>
+                <span>₦{{ "%.2f"|format(item.unit_price * item.quantity) }}</span>
+              </div>
+            {% endfor %}
+          {% else %}
+            {% for id, c in session.get('cart', {}).items() %}
+              {% set subtotal.value = subtotal.value + (c.price * c.quantity) %}
+              <div class="d-flex justify-content-between mb-2">
+                <span>{{ c.name }} × {{ c.quantity }}</span>
+                <span>₦{{ "%.2f"|format(c.price * c.quantity) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <hr>
+
+          <div class="d-flex justify-content-between">
+            <span>Subtotal:</span>
+            <span id="subtotal-display" data-value="{{ subtotal.value }}">₦{{ "%.2f"|format(subtotal.value) }}</span>
+          </div>
+
+          {% if not order %}
+          <form id="applyCouponForm" class="mt-3">
+            <div class="input-group">
+              <input id="couponCode" class="form-control" placeholder="Enter coupon code">
+              <button class="btn btn-outline-primary" type="submit">Apply</button>
+            </div>
+            <small id="couponMessage" class="mt-1"></small>
+          </form>
+          {% endif %}
+
+          <div id="discountRow" class="d-flex justify-content-between text-success mt-2" style="display: {% if discount %}flex{% else %}none{% endif %};">
+            <span>Discount:</span>
+            <span id="discountAmount">₦{{ "%.2f"|format(discount) if discount else '0.00' }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mt-2">
+            <span>Delivery Fee:</span>
+            <span id="delivery-fee-display">₦{{ delivery_fee }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <span>VAT (7.5%):</span>
+            <span id="vat-display">₦{{ "%.2f"|format(subtotal.value * 0.075) }}</span>
+          </div>
+
+          <hr>
+
+          <div class="d-flex justify-content-between fw-bold fs-5">
+            <span>Total:</span>
+            <span id="total-display">₦{{ "%.2f"|format(subtotal.value + delivery_fee + (subtotal.value * 0.075) - discount) }}</span>
+          </div>
+
+          <input type="hidden" name="coupon_code" id="hiddenCoupon" form="deliveryForm">
+
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+
+<script>
+/* Payment panel toggle */
+document.querySelectorAll(".payment-option").forEach(opt => {
+  opt.addEventListener("change", () => {
+    document.querySelectorAll(".payment-panel").forEach(p => p.classList.remove("show"));
+    const target = opt.dataset.target;
+    document.getElementById(target).classList.add("show");
+  });
+});
+
+/* Update delivery fee when zone selected (before order created) */
+function updateZoneFee(){
+  const sel = document.getElementById('delivery_zone');
+  if(!sel) return;
+  const fee = parseFloat(sel.selectedOptions[0].dataset.fee || 0);
+  const eta = sel.selectedOptions[0].dataset.eta || '';
+  const subtotal = parseFloat(document.getElementById('subtotal-display').dataset.value || 0);
+  const discount = parseFloat(document.getElementById('discountAmount').innerText.replace('₦','')) || 0;
+  const vat = subtotal * 0.075;
+  const total = subtotal + fee + vat - discount;
+  document.getElementById('delivery-fee-display').innerText = `₦${fee}`;
+  document.getElementById('vat-display').innerText = `₦${vat.toFixed(2)}`;
+  document.getElementById('total-display').innerText = `₦${total.toFixed(2)}`;
+  if(eta){
+    // optional: show ETA in payment area
+    const alert = document.querySelector('.alert-info strong + br');
+    // you can update DOM to show ETA if desired
+  }
+}
+
+/* Apply coupon (AJAX) */
+document.getElementById('applyCouponForm')?.addEventListener('submit', function(e){
+  e.preventDefault();
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Applying...`;
+
+  const code = document.getElementById('couponCode').value.trim();
+  if(!code){
+    btn.disabled = false; btn.innerHTML = 'Apply'; return;
+  }
+
+  const subtotal = parseFloat(document.getElementById('subtotal-display').dataset.value || 0);
+  const deliveryZoneId = parseInt(document.getElementById('delivery_zone')?.value) || null;
+
+  fetch("{{ url_for('orders.apply_coupon_api') }}", {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code, subtotal: subtotal, delivery_zone_id: deliveryZoneId})
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    const msg = document.getElementById('couponMessage');
+    if(!data.valid){
+      msg.className = 'text-danger';
+      msg.textContent = data.message;
+      return;
+    }
+    msg.className = 'text-success';
+    msg.textContent = data.message;
+    document.getElementById('discountRow').style.display = 'flex';
+    document.getElementById('discountAmount').innerText = '₦' + data.discount.toFixed(2);
+    document.getElementById('hiddenCoupon').value = code;
+
+    // recalc totals
+    const fee = parseFloat(document.getElementById('delivery-fee-display').innerText.replace('₦','')) || 0;
+    const vat = subtotal * 0.075;
+    const total = subtotal + fee + vat - data.discount;
+    document.getElementById('vat-display').innerText = '₦' + vat.toFixed(2);
+    document.getElementById('total-display').innerText = '₦' + total.toFixed(2);
+  })
+  .catch(err => {
+    console.error('Coupon apply error', err);
+  })
+  .finally(()=>{ btn.disabled = false; btn.innerHTML = 'Apply'; });
+});
+</script>
 {% endblock %}

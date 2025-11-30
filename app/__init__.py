@@ -41,12 +41,14 @@ def create_app():
     from app.routes.menu import bp as menu_bp
     from app.routes.orders import bp as orders_bp
     from app.routes.admin import bp as admin_bp
+    from app.routes.admin_delivery import bp as admin_delivery_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(menu_bp, url_prefix='/menu')
     app.register_blueprint(orders_bp, url_prefix='/orders')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(admin_delivery_bp, url_prefix='/admin/delivery')
 
     @app.context_processor
     def cart_context():

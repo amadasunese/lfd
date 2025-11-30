@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Create Coupon{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h4 class="fw-bold mb-3">Create New Coupon</h4>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <form method="POST">
+
+        <!-- Coupon Code -->
+        <div class="mb-3">
+          <label class="form-label">Coupon Code</label>
+          <input type="text" class="form-control" name="code" required placeholder="e.g., WELCOME10">
+        </div>
+
+        <!-- Type -->
+        <div class="mb-3">
+          <label class="form-label">Discount Type</label>
+          <select class="form-select" name="coupon_type">
+            <option value="percent">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (₦)</option>
+          </select>
+        </div>
+
+        <!-- Amount -->
+        <div class="mb-3">
+          <label class="form-label">Discount Amount</label>
+          <input type="number" class="form-control" name="amount" step="0.01"
+                 placeholder="10 means 10% or ₦10 depending on type">
+        </div>
+
+        <!-- Validity -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Starts At</label>
+            <input type="datetime-local" class="form-control" name="starts_at">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Expires At</label>
+            <input type="datetime-local" class="form-control" name="expires_at">
+          </div>
+        </div>
+
+        <!-- Conditions -->
+        <div class="mb-3">
+          <label class="form-label">Minimum Subtotal (Optional)</label>
+          <input type="number" class="form-control" step="0.01" name="min_subtotal"
+                 placeholder="Minimum order e.g., 5000">
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Max Uses (Optional)</label>
+            <input type="number" class="form-control" name="max_uses"
+                   placeholder="Total allowed uses">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Max Uses Per User (Optional)</label>
+            <input type="number" class="form-control" name="max_uses_per_user"
+                   placeholder="Limit per user">
+          </div>
+        </div>
+
+        <!-- DELIVERY ZONE RESTRICTION -->
+        <div class="mb-3">
+          <label class="form-label">Valid Only for Delivery Zones (Optional)</label>
+          <select class="form-select" name="zones" multiple>
+            {% for z in zones %}
+              <option value="{{ z.id }}">{{ z.name }} (₦{{ z.fee }})</option>
+            {% endfor %}
+          </select>
+          <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select multiple</small>
+        </div>
+
+        <!-- Admin Note -->
+        <div class="mb-3">
+          <label class="form-label">Internal Note (Optional)</label>
+          <textarea class="form-control" name="note" rows="2"></textarea>
+        </div>
+
+        <hr>
+
+        <button class="btn btn-primary">Create Coupon</button>
+        <a href="{{ url_for('admin.coupons_list') }}" class="btn btn-secondary">
+          Cancel
+        </a>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

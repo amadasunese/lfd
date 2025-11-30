@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Lauracious Foodies Delight{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Checkout</h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+  <!-- A.  CREATE ORDER FIRST -->
+  <form method="POST" action="{{ url_for('orders.create_order') }}" id="deliveryForm">
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="mb-0">Delivery Information</h5></div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-control" name="first_name" value="{{ current_user.first_name }}" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-control" name="last_name" value="{{ current_user.last_name }}" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" name="phone_number" value="{{ current_user.phone or '' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Delivery Address</label>
+          <textarea class="form-control" name="delivery_address" rows="3" required>{{ delivery_address or '' }}</textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Select Delivery Area of your Address</label>
+          <select class="form-control" id="delivery_zone" name="delivery_zone" required onchange="updateZoneFee()">
+              <option value="">-- Select Area --</option>
+              {% for zone in zones %}
+                  <option value="{{ zone.id }}" data-fee="{{ zone.fee }}">
+                      {{ zone.name }} (₦{{ zone.fee }})
+                  </option>
+              {% endfor %}
+          </select>
+      </div>
+        <div class="mb-3">
+          <label class="form-label">Additional Notes</label>
+          <textarea class="form-control" name="notes" rows="2" placeholder="Optional"></textarea>
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg w-100">Continue to Payment</button>
+  </form>
+
+  <!-- B.  PAYMENT CHOICE (only after order exists) -->
+  {% if order %}
+  <div class="card mb-4 mt-4">
+    <div class="card-header"><h5 class="mb-0">Payment Method</h5></div>
+    <div class="card-body">
+
+      <!-- Paystack Online -->
+      <div class="card mb-3">
+        <div class="card-header">Pay Online (Card, Bank, USSD …)</div>
+        <div class="card-body">
+            <form action="{{ url_for('orders.pay_with_paystack') }}" method="POST">
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fab fa-stripe-s me-2"></i>Pay with Paystack
+                </button>
+              </form>
+        </div>
+      </div>
+
+      <!-- Cash on Delivery fallback -->
+      <form action="{{ url_for('orders.confirm_cash_order', order_id=order.id) }}" method="POST">
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="radio" name="payment_method" value="cash" checked>
+          <label class="form-check-label">Cash on Delivery</label>
+        </div>
+        <button type="submit" class="btn btn-outline-primary w-100">Place Cash Order</button>
+      </form>
+
+    </div>
+  </div>
+  {% endif %}
+</div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if session.get('cart') %}
+                        {% for item_id, item in session.cart.items() %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ item.name }} x {{ item.quantity }}</span>
+                            <span>₦{{ "%.2f"|format(item.price * item.quantity) }}</span>
+                        </div>
+                        {% endfor %}
+                        <hr>
+                        {% set subtotal = namespace(value=0) %}
+                        {% for item_id, item in session.cart.items() %}
+                            {% set subtotal.value = subtotal.value + (item.price * item.quantity) %}
+                        {% endfor %}
+                        
+
+                        <div class="d-flex justify-content-between mb-2">
+                          <span>Subtotal:</span>
+                          <span id="subtotal-display" data-value="{{ subtotal.value }}">
+                              ₦{{ "%.2f"|format(subtotal.value) }}
+                          </span>
+                      </div>
+                      
+                      <div class="d-flex justify-content-between mb-2">
+                          <span>Delivery Fee:</span>
+                          <span id="delivery-fee-display">
+                              ₦{{ delivery_fee }}
+                          </span>
+                      </div>
+                      
+                      <div class="d-flex justify-content-between mb-2">
+                          <span>Tax (7.5% VAT):</span>
+                          <span id="vat-display">
+                              ₦{{ "%.2f"|format(subtotal.value * 0.075) }}
+                          </span>
+                      </div>
+                      
+                      <hr>
+                      
+                      <div class="d-flex justify-content-between fw-bold">
+                          <span>Total:</span>
+                          <span id="total-display">
+                              ₦{{ "%.2f"|format(subtotal.value + delivery_fee + (subtotal.value * 0.075)) }}
+                          </span>
+                      </div>
+
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  function updateZoneFee() {
+      const zoneSelect = document.getElementById("delivery_zone");
+      const fee = parseInt(zoneSelect.selectedOptions[0].getAttribute("data-fee"));
+  
+      // Update delivery fee
+      document.getElementById("delivery-fee-display").innerText = `₦${fee}`;
+  
+      // Recalculate TOTAL
+      const subtotal = parseFloat(document.getElementById("subtotal-display").getAttribute("data-value"));
+      const vat = subtotal * 0.075;
+      const total = subtotal + vat + fee;
+  
+      document.getElementById("vat-display").innerText = `₦${vat.toFixed(2)}`;
+      document.getElementById("total-display").innerText = `₦${total.toFixed(2)}`;
+  }
+  </script>
+  
+{% endblock %}

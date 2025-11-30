@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Coupons{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold">Coupons</h4>
+    <a href="{{ url_for('admin.coupon_create') }}" class="btn btn-primary btn-sm">
+      + Create Coupon
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+
+      <table class="table table-striped table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Validity</th>
+            <th>Usage</th>
+            <th>Status</th>
+            <th style="width: 120px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for c in coupons %}
+          <tr>
+            <td class="fw-semibold">{{ c.code }}</td>
+
+            <td>
+              {% if c.coupon_type == 'percent' %}
+                <span class="badge bg-info">Percent</span>
+              {% else %}
+                <span class="badge bg-warning">Fixed</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if c.coupon_type == 'percent' %}
+                {{ c.amount }}%
+              {% else %}
+                ₦{{ c.amount }}
+              {% endif %}
+            </td>
+
+            <td>
+              {% if c.starts_at %} {{ c.starts_at.strftime('%Y-%m-%d') }} {% else %} — {% endif %}
+              –
+              {% if c.expires_at %} {{ c.expires_at.strftime('%Y-%m-%d') }} {% else %} ∞ {% endif %}
+            </td>
+
+            <td>
+              Used: {{ c.uses_count or 0 }}
+              {% if c.max_uses %}
+                / {{ c.max_uses }}
+              {% endif %}
+            </td>
+
+            <td>
+              {% if c.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <!-- Toggle -->
+              <form method="POST" action="{{ url_for('admin.coupon_toggle', coupon_id=c.id) }}" class="d-inline">
+                {% if c.is_active %}
+                <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+                {% else %}
+                <button class="btn btn-sm btn-outline-success">Activate</button>
+                {% endif %}
+              </form>
+          
+              <!-- Edit -->
+              <a href="{{ url_for('admin.coupon_edit', coupon_id=c.id) }}" 
+                 class="btn btn-sm btn-warning">Edit</a>
+          
+              <!-- Delete -->
+              <form method="POST" action="{{ url_for('admin.coupon_delete', coupon_id=c.id) }}"
+                    class="d-inline" onsubmit="return confirm('Delete coupon?')">
+                <button class="btn btn-sm btn-danger">Delete</button>
+              </form>
+          </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -92,6 +92,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin.dashboard') }}">Admin</a>
                             </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_delivery.index') }}">Delivery Zones</a>
+                            </li>
+
                         {% endif %}
     
                         <li class="nav-item dropdown">
@@ -112,6 +117,9 @@
                         </li>
                     {% endif %}
                 </ul>
+                <button id="themeToggle" class="btn btn-outline-secondary btn-sm ms-2">
+                    🌙 Dark Mode
+                </button>
     
             </div>
         </div>
@@ -168,5 +176,31 @@
     <!-- <script src="{{ url_for('static', filename='js/main.js') }}"></script> -->
     <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
     {% block extra_js %}{% endblock %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById("themeToggle");
+        
+            const savedTheme = localStorage.getItem("theme");
+        
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-mode");
+                toggleBtn.textContent = "☀ Light Mode";
+            }
+        
+            toggleBtn.addEventListener("click", () => {
+                document.body.classList.toggle("dark-mode");
+        
+                if (document.body.classList.contains("dark-mode")) {
+                    localStorage.setItem("theme", "dark");
+                    toggleBtn.textContent = "☀ Light Mode";
+                } else {
+                    localStorage.setItem("theme", "light");
+                    toggleBtn.textContent = "🌙 Dark Mode";
+                }
+            });
+        });
+        </script>
+        
 </body>
 </html>
