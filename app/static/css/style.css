@@ -573,6 +573,19 @@ footer a:hover {
 }
 
 
+/* Center logo only on mobile */
+/* .navbar-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@media (min-width: 992px) {
+    .navbar-logo {
+        position: static;
+        transform: none;
+    }
+} */
 
 
 /* Restore Bootstrap navbar toggler icon in dark nav */

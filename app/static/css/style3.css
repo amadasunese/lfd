@@ -1,0 +1,287 @@
+/* =========================================================
+   BASE THEME VARIABLES – LIGHT MODE
+========================================================= */
+:root {
+    --primary-color: #ff6b6b;
+    --secondary-color: #4ecdc4;
+    --dark-color: #2c3e50;
+    --light-color: #f8f9fa;
+
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+
+    --card-bg: #ffffff;
+    --navbar-bg: #212529;
+    --border-color: #ddd;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+
+    color-scheme: light;
+}
+
+/* =========================================================
+   DARK MODE – OVERRIDES VARIABLES ONLY
+========================================================= */
+.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #eaeaea;
+
+    --card-bg: #262626;
+    --navbar-bg: #111;
+
+    --border-color: #444;
+
+    --primary-color: #ff8c8c;
+    --secondary-color: #3bbcb0;
+
+    --shadow-color: rgba(0, 0, 0, 0.4);
+
+    color-scheme: dark;
+}
+
+/* =========================================================
+   GLOBAL ELEMENT STYLES
+========================================================= */
+html, body {
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+.navbar {
+    background: var(--navbar-bg) !important;
+    transition: background 0.3s ease;
+}
+
+/* Center logo on mobile */
+/* .navbar-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+}
+
+@media (min-width: 992px) {
+    .navbar-logo {
+        position: static;
+        transform: none;
+    }
+} */
+
+/* Space under logo for mobile so collapse doesn't collide */
+@media (max-width: 991px) {
+    .navbar .container {
+        padding-top: 48px;
+    }
+}
+
+/* Toggler visibility fix */
+.navbar-toggler {
+    z-index: 25;
+}
+
+/* White hamburger icon */
+.navbar-dark .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255,255,255,0.9%29' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    color: #fff !important;
+    transition: color 0.25s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Mobile action buttons */
+.nav-link.text-white {
+    color: #fff !important;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+.btn {
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 500;
+    border: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #e55a5a);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e55a5a, #d44949);
+    transform: translateY(-2px);
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+.form-control,
+.form-select {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-color);
+    transition: all 0.25s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.15rem rgba(255, 107, 107, 0.35);
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+.card {
+    background: var(--card-bg);
+    box-shadow: 0 4px 6px var(--shadow-color);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px var(--shadow-color);
+}
+
+.card-header, .card-body {
+    background: var(--card-bg) !important;
+    color: var(--text-color);
+}
+
+/* =========================================================
+   TABLES
+========================================================= */
+.table {
+    background: var(--card-bg);
+    color: var(--text-color);
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.table thead th {
+    background: var(--dark-color);
+    color: white;
+    border: none;
+}
+
+.table-hover tbody tr:hover {
+    background: rgba(255, 107, 107, 0.05);
+}
+
+/* =========================================================
+   BADGES & STATUS LABELS
+========================================================= */
+.badge {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
+/* Order statuses */
+.status-pending {
+    background: var(--warning-color);
+    color: #000;
+}
+
+.status-confirmed {
+    background: var(--info-color);
+    color: #fff;
+}
+
+.status-preparing {
+    background: #fd7e14;
+    color: #fff;
+}
+
+.status-delivered {
+    background: var(--success-color);
+    color: #fff;
+}
+
+.status-cancelled {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+/* =========================================================
+   CART BADGE
+========================================================= */
+.cart-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger-color);
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+footer {
+    background: var(--navbar-bg);
+    color: #fff;
+    padding: 40px 0;
+}
+
+footer a {
+    color: #ccc;
+}
+
+footer a:hover {
+    color: var(--primary-color);
+}
+
+/* =========================================================
+   RESPONSIVE FIXES
+========================================================= */
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .quantity-controls {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
