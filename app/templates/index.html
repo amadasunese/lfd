@@ -80,37 +80,7 @@
             {% for item in featured_items %}
             <div class="col-md-6 col-lg-4">
               
-                <!-- <div class="dish-card">
-                    <div class="dish-image-wrapper">
-                        <img src="{{ url_for('static', filename='images/menu/' ~ item.image_url) }}"
-                             alt="{{ item.name }}"
-                             class="dish-image"
-                             loading="lazy"
-                             decoding="async">
-                        <span class="dish-price">₦{{ "%.2f"|format(item.price) }}</span>
-                    </div>
                 
-                    <div class="dish-body">
-                        <h5 class="dish-title">{{ item.name }}</h5>
-                        <p class="dish-description">{{ item.description[:120] }}{% if item.description|length > 120 %}...{% endif %}</p>
-                
-                        <div class="dish-actions">
-                            {% if item.id in in_cart_ids %}
-                                <a href="{{ url_for('orders.cart') }}" class="btn btn-success btn-w-100">
-                                    <i class="fas fa-check me-2"></i> View Cart
-                                </a>
-                            {% else %}
-                                <form method="POST" action="{{ url_for('orders.add_to_cart') }}" class="add-to-cart-form w-100">
-                                    <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <input type="hidden" name="quantity" value="1">
-                                    <button type="submit" class="btn btn-primary btn-w-100">
-                                        <i class="fas fa-cart-plus me-2"></i> Add to Cart
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div> -->
                 <div class="dish-card">
                     <div class="dish-image-wrapper">
                         <img src="{{ url_for('static', filename='images/menu/' ~ item.image_url) }}"
@@ -355,10 +325,11 @@ body {
 .feature-card {
     padding: 40px 30px;
     border-radius: 16px;
-    opacity: 0;
+    /* opacity: 0; */
     transform: translateY(20px);
     transition: all 0.6s ease;
 }
+
 .feature-card.visible {
     opacity: 1;
     transform: translateY(0);
