@@ -244,15 +244,15 @@
         });
     }
 
-    function initNavbarToggle() {
-        const navbarToggler = document.querySelector('.navbar-toggler');
-        const navbarCollapse = document.querySelector('.navbar-collapse');
-        if (!navbarToggler || !navbarCollapse) return;
+    // function initNavbarToggle() {
+    //     const navbarToggler = document.querySelector('.navbar-toggler');
+    //     const navbarCollapse = document.querySelector('.navbar-collapse');
+    //     if (!navbarToggler || !navbarCollapse) return;
 
-        navbarToggler.addEventListener('click', () => {
-            navbarCollapse.classList.toggle('show');
-        });
-    }
+    //     navbarToggler.addEventListener('click', () => {
+    //         navbarCollapse.classList.toggle('show');
+    //     });
+    // }
 
     function initPriceRange() {
         const priceRange = document.getElementById('price-range');
